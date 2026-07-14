@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HEBERT BARBER — Assistente Virtual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+/* ============================================================
+   1) VARIÁVEIS / DESIGN TOKENS
+   ============================================================ */
+:root {
+  --color-black: #0F0F0F;
+  --color-black-soft: #1B1B1B;
+  --color-black-elevated: #232323;
+  --color-gold: #D4AF37;
+  --color-gold-light: #E9CE7A;
+  --color-gold-dim: rgba(212, 175, 55, 0.15);
+  --color-white: #FFFFFF;
+  --color-white-dim: rgba(255, 255, 255, 0.65);
+  --color-white-faint: rgba(255, 255, 255, 0.12);
+  --color-success: #3ED27C;
+
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Poppins', sans-serif;
+
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 999px;
+
+  --shadow-gold: 0 8px 30px rgba(212, 175, 55, 0.25);
+  --shadow-soft: 0 10px 40px rgba(0, 0, 0, 0.45);
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 0.2s var(--ease);
+  --transition-medium: 0.4s var(--ease);
+}
+
+/* ============================================================
+   2) BASE / LAYOUT GERAL
+   ============================================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--color-black);
+  color: var(--color-white);
+  overflow-x: hidden;
+}
+
+.view { display: none; min-height: 100vh; animation: fadeIn var(--transition-medium); }
+.view--active { display: block; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ============================================================
+   3) NAVBAR (landing)
+   ============================================================ */
+.navbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 24px 6vw; position: sticky; top: 0; z-index: 50;
+  backdrop-filter: blur(12px); background: rgba(15, 15, 15, 0.7);
+  border-bottom: 1px solid var(--color-white-faint);
+}
+.navbar__logo { font-family: var(--font-display); font-weight: 700; letter-spacing: 2px; font-size: 1.3rem; }
+.navbar__logo span { color: var(--color-gold); }
+.navbar__links { display: flex; gap: 32px; }
+.navbar__links a { color: var(--color-white-dim); text-decoration: none; font-size: 0.9rem; font-weight: 500; transition: color var(--transition-fast); }
+.navbar__links a:hover { color: var(--color-gold); }
+@media (max-width: 640px) { .navbar__links { display: none; } }
+
+/* ============================================================
+   4) HERO
+   ============================================================ */
+.hero {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  min-height: 88vh; text-align: center; padding: 40px 6vw; overflow: hidden;
+}
+.hero__glow {
+  position: absolute; width: 700px; height: 700px;
+  background: radial-gradient(circle, var(--color-gold-dim) 0%, transparent 70%);
+  top: -200px; left: 50%; transform: translateX(-50%);
+  pointer-events: none; animation: pulseGlow 6s ease-in-out infinite;
+}
+@keyframes pulseGlow { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
+.hero__content { position: relative; z-index: 2; max-width: 780px; animation: slideUp 0.8s var(--ease); }
+@keyframes slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+.hero__badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--color-gold-dim); border: 1px solid rgba(212, 175, 55, 0.4);
+  color: var(--color-gold-light); padding: 8px 18px; border-radius: var(--radius-full);
+  font-size: 0.8rem; font-weight: 500; margin-bottom: 28px;
+}
+.hero__title { font-family: var(--font-display); font-size: clamp(2.2rem, 5vw, 3.6rem); line-height: 1.2; font-weight: 700; margin-bottom: 20px; }
+.hero__title span { color: var(--color-gold); }
+.hero__subtitle { color: var(--color-white-dim); font-size: clamp(1rem, 2vw, 1.15rem); margin-bottom: 40px; }
+.hero__stats { display: flex; justify-content: center; gap: 48px; margin-top: 56px; }
+.stat { display: flex; flex-direction: column; gap: 4px; }
+.stat strong { font-size: 1.6rem; color: var(--color-gold); font-family: var(--font-display); }
+.stat span { font-size: 0.8rem; color: var(--color-white-dim); }
+
+/* ============================================================
+   5) BOTÕES
+   ============================================================ */
+.btn {
+  border: none; cursor: pointer; font-family: var(--font-body); font-weight: 600; font-size: 1rem;
+  border-radius: var(--radius-full); padding: 16px 36px; display: inline-flex; align-items: center; gap: 10px;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.btn--gold { background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold)); color: var(--color-black); box-shadow: var(--shadow-gold); }
+.btn--gold:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(212, 175, 55, 0.4); }
+.btn--gold:active { transform: translateY(0); }
+
+/* ============================================================
+   6) SEÇÕES (landing)
+   ============================================================ */
+.section { padding: 100px 6vw; max-width: 1200px; margin: 0 auto; }
+.section__title { font-family: var(--font-display); text-align: center; font-size: clamp(1.6rem, 3vw, 2.4rem); margin-bottom: 56px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
+.card { background: var(--color-black-soft); border: 1px solid var(--color-white-faint); border-radius: var(--radius-md); padding: 36px 28px; text-align: center; transition: transform var(--transition-fast), border-color var(--transition-fast); }
+.card:hover { transform: translateY(-6px); border-color: var(--color-gold); }
+.card i { font-size: 1.8rem; color: var(--color-gold); margin-bottom: 18px; }
+.card h3 { font-family: var(--font-display); margin-bottom: 10px; }
+.card p { color: var(--color-white-dim); font-size: 0.9rem; }
+
+.footer { text-align: center; padding: 32px 6vw; border-top: 1px solid var(--color-white-faint); color: var(--color-white-dim); font-size: 0.85rem; }
+.footer__admin-link { color: var(--color-white-dim); text-decoration: none; opacity: 0.5; font-size: 0.75rem; transition: opacity var(--transition-fast); }
+.footer__admin-link:hover { opacity: 1; color: var(--color-gold); }
+
+/* ============================================================
+   7) CHAT
+   ============================================================ */
+.chat { display: flex; flex-direction: column; height: 100vh; max-width: 720px; margin: 0 auto; background: var(--color-black); }
+
+.chat__header {
+  display: flex; align-items: center; gap: 14px; padding: 16px 20px;
+  background: var(--color-black-soft); border-bottom: 1px solid var(--color-white-faint);
+  position: sticky; top: 0; z-index: 10;
+}
+.chat__back { background: none; border: none; color: var(--color-white); font-size: 1.1rem; cursor: pointer; padding: 8px; border-radius: var(--radius-full); transition: background var(--transition-fast); }
+.chat__back:hover { background: var(--color-white-faint); }
+.chat__avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold));
+  display: flex; align-items: center; justify-content: center; color: var(--color-black); font-size: 1.1rem; flex-shrink: 0;
+}
+.chat__info { flex: 1; }
+.chat__info h2 { font-size: 1rem; font-family: var(--font-display); letter-spacing: 0.5px; }
+.chat__info p { font-size: 0.78rem; color: var(--color-white-dim); display: flex; align-items: center; gap: 6px; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-success); display: inline-block; box-shadow: 0 0 8px var(--color-success); }
+.chat__clear { background: none; border: none; color: var(--color-white-dim); font-size: 1rem; cursor: pointer; padding: 8px; border-radius: var(--radius-full); transition: color var(--transition-fast), background var(--transition-fast); }
+.chat__clear:hover { color: #ff5c5c; background: var(--color-white-faint); }
+
+.chat__messages { flex: 1; overflow-y: auto; padding: 24px 18px; display: flex; flex-direction: column; gap: 14px; scroll-behavior: smooth; }
+.chat__messages::-webkit-scrollbar { width: 6px; }
+.chat__messages::-webkit-scrollbar-thumb { background: var(--color-white-faint); border-radius: var(--radius-full); }
+
+.message { max-width: 78%; padding: 12px 16px; border-radius: var(--radius-md); font-size: 0.92rem; line-height: 1.5; animation: messageIn 0.3s var(--ease); position: relative; }
+@keyframes messageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.message--bot { align-self: flex-start; background: var(--color-black-soft); border: 1px solid var(--color-white-faint); border-bottom-left-radius: 4px; white-space: pre-line; }
+.message--user { align-self: flex-end; background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold)); color: var(--color-black); border-bottom-right-radius: 4px; white-space: pre-line; }
+.message__time { display: block; font-size: 0.68rem; margin-top: 6px; opacity: 0.6; }
+.message--bot .message__time { color: var(--color-white-dim); }
+.message--user .message__time { color: rgba(15, 15, 15, 0.6); }
+
+.typing-indicator { padding: 0 18px 12px; transition: opacity var(--transition-fast); }
+.typing-indicator--hidden { display: none; }
+.typing-indicator__bubble { display: inline-flex; align-items: center; gap: 5px; background: var(--color-black-soft); border: 1px solid var(--color-white-faint); padding: 12px 16px; border-radius: var(--radius-md); border-bottom-left-radius: 4px; }
+.typing-indicator__bubble span { width: 6px; height: 6px; background: var(--color-gold); border-radius: 50%; animation: typingBounce 1.2s infinite ease-in-out; }
+.typing-indicator__bubble span:nth-child(2) { animation-delay: 0.15s; }
+.typing-indicator__bubble span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typingBounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.5; } 30% { transform: translateY(-6px); opacity: 1; } }
+
+.typewriter-cursor::after { content: '|'; animation: blink 0.8s step-start infinite; color: var(--color-gold); }
+@keyframes blink { 50% { opacity: 0; } }
+
+.chat__input-bar { display: flex; align-items: flex-end; gap: 10px; padding: 14px 16px; background: var(--color-black-soft); border-top: 1px solid var(--color-white-faint); }
+.chat__textarea {
+  flex: 1; resize: none; max-height: 120px; background: var(--color-black-elevated);
+  border: 1px solid var(--color-white-faint); color: var(--color-white); font-family: var(--font-body);
+  font-size: 0.92rem; padding: 12px 16px; border-radius: var(--radius-lg); outline: none;
+  transition: border-color var(--transition-fast);
+}
+.chat__textarea:focus { border-color: var(--color-gold); }
+.chat__send {
+  width: 46px; height: 46px; border-radius: 50%; border: none;
+  background: linear-gradient(135deg, var(--color-gold-light), var(--color-gold)); color: var(--color-black);
+  font-size: 1rem; cursor: pointer; flex-shrink: 0; transition: transform var(--transition-fast);
+}
+.chat__send:hover { transform: scale(1.08); }
+.chat__send:active { transform: scale(0.96); }
+.chat__send:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+@media (max-width: 640px) { .chat { max-width: 100%; } .message { max-width: 88%; } }
+
+/* ============================================================
+   8) ADMIN
+   ============================================================ */
+#view-admin { display: flex; min-height: 100vh; }
+.admin-sidebar {
+  width: 240px; background: var(--color-black-soft); border-right: 1px solid var(--color-white-faint);
+  padding: 28px 18px; display: flex; flex-direction: column; gap: 32px; flex-shrink: 0;
+}
+.admin-sidebar__logo { font-family: var(--font-display); font-size: 1.1rem; font-weight: 700; letter-spacing: 1px; padding: 0 10px; }
+.admin-sidebar__logo span { color: var(--color-gold); }
+.admin-nav { display: flex; flex-direction: column; gap: 4px; }
+.admin-nav a {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: var(--radius-sm);
+  color: var(--color-white-dim); text-decoration: none; font-size: 0.9rem; font-weight: 500; cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast); background: none; border: none; text-align: left; width: 100%; font-family: var(--font-body);
+}
+.admin-nav a:hover { background: var(--color-white-faint); color: var(--color-white); }
+.admin-nav a.active { background: var(--color-gold-dim); color: var(--color-gold-light); }
+.admin-nav a i { width: 18px; text-align: center; }
+.admin-sidebar__footer { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
+.admin-sidebar__logout, .admin-sidebar__exit {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--radius-sm);
+  color: var(--color-white-dim); background: none; border: 1px solid var(--color-white-faint); cursor: pointer;
+  font-size: 0.85rem; width: 100%; font-family: var(--font-body);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+.admin-sidebar__logout:hover { color: #ff5c5c; border-color: #ff5c5c; }
+.admin-sidebar__exit:hover { color: var(--color-gold); border-color: var(--color-gold); }
+
+.admin-main { flex: 1; padding: 32px 40px; overflow-y: auto; }
+.admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+.admin-header h1 { font-family: var(--font-display); font-size: 1.6rem; }
+.admin-header p { color: var(--color-white-dim); font-size: 0.9rem; margin-top: 4px; }
+
+.admin-page { display: none; }
+.admin-page--active { display: block; }
+
+.admin-empty { border: 1px dashed var(--color-white-faint); border-radius: var(--radius-md); padding: 64px 32px; text-align: center; color: var(--color-white-dim); }
+.admin-empty i { font-size: 2rem; color: var(--color-gold); margin-bottom: 16px; display: block; }
+.admin-empty h3 { color: var(--color-white); font-family: var(--font-display); margin-bottom: 8px; }
+.admin-empty p { font-size: 0.85rem; max-width: 420px; margin: 0 auto; }
+.admin-empty code { background: var(--color-black-elevated); padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; }
+
+@media (max-width: 800px) {
+  #view-admin { flex-direction: column; }
+  .admin-sidebar { width: 100%; flex-direction: row; align-items: center; overflow-x: auto; }
+  .admin-nav { flex-direction: row; }
+  .admin-sidebar__footer { display: none; }
+}
+</style>
+</head>
+<body>
+
+  <!-- ================= LANDING PAGE ================= -->
+  <div id="view-landing" class="view view--active">
+
+    <header class="navbar">
+      <div class="navbar__logo">HEBERT <span>BARBER</span></div>
+      <nav class="navbar__links">
+        <a href="#servicos">Serviços</a>
+        <a href="#sobre">Sobre</a>
+        <a href="#contato">Contato</a>
+      </nav>
+    </header>
+
+    <section class="hero">
+      <div class="hero__glow"></div>
+      <div class="hero__content">
+        <span class="hero__badge"><i class="fa-solid fa-wand-magic-sparkles"></i> Atendimento por Inteligência Artificial</span>
+        <h1 class="hero__title">Agende seu horário com nosso <span>Assistente Virtual</span></h1>
+        <p class="hero__subtitle">Converse com nossa IA e marque seu horário em poucos segundos.</p>
+        <button id="btn-start-chat" class="btn btn--gold">
+          <i class="fa-solid fa-comment-dots"></i>
+          Iniciar Conversa
+        </button>
+
+        <div class="hero__stats">
+          <div class="stat"><strong>24h</strong><span>Disponibilidade</span></div>
+          <div class="stat"><strong>100%</strong><span>Automatizado</span></div>
+          <div class="stat"><strong>&lt; 1min</strong><span>Para agendar</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="servicos" class="section">
+      <h2 class="section__title">Nossos Serviços</h2>
+      <div class="cards">
+        <div class="card"><i class="fa-solid fa-scissors"></i><h3>Corte Clássico</h3><p>Precisão e estilo em cada detalhe.</p></div>
+        <div class="card"><i class="fa-solid fa-pump-soap"></i><h3>Barba</h3><p>Modelagem completa com toalha quente.</p></div>
+        <div class="card"><i class="fa-solid fa-star"></i><h3>Combo Premium</h3><p>Corte + barba + acabamento especial.</p></div>
+      </div>
+    </section>
+
+    <footer id="contato" class="footer">
+      <p>© <span id="year"></span> Hebert Barber. Todos os direitos reservados.</p>
+      <p style="margin-top:8px;"><a href="#" id="link-admin" class="footer__admin-link">Painel administrativo</a></p>
+    </footer>
+  </div>
+
+  <!-- ================= CHAT VIEW ================= -->
+  <div id="view-chat" class="view">
+    <div class="chat">
+      <header class="chat__header">
+        <button id="btn-back" class="chat__back" aria-label="Voltar"><i class="fa-solid fa-arrow-left"></i></button>
+        <div class="chat__avatar"><i class="fa-solid fa-scissors"></i></div>
+        <div class="chat__info">
+          <h2>HEBERT BARBER</h2>
+          <p><span class="status-dot"></span> Online · Assistente Virtual</p>
+        </div>
+        <button id="btn-clear-chat" class="chat__clear" title="Limpar conversa"><i class="fa-solid fa-trash"></i></button>
+      </header>
+
+      <main id="chat-messages" class="chat__messages"></main>
+
+      <div id="typing-indicator" class="typing-indicator typing-indicator--hidden">
+        <div class="typing-indicator__bubble"><span></span><span></span><span></span></div>
+      </div>
+
+      <footer class="chat__input-bar">
+        <textarea id="chat-input" class="chat__textarea" placeholder="Digite sua mensagem..." rows="1"></textarea>
+        <button id="btn-send" class="chat__send" aria-label="Enviar mensagem"><i class="fa-solid fa-paper-plane"></i></button>
+      </footer>
+    </div>
+  </div>
+
+  <!-- ================= ADMIN VIEW ================= -->
+  <div id="view-admin" class="view">
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar__logo">HEBERT <span>ADMIN</span></div>
+      <nav class="admin-nav" id="admin-nav"></nav>
+      <div class="admin-sidebar__footer">
+        <button class="admin-sidebar__exit" id="btn-admin-exit"><i class="fa-solid fa-house"></i> Voltar ao site</button>
+        <button class="admin-sidebar__logout" id="btn-admin-logout"><i class="fa-solid fa-right-from-bracket"></i> Sair</button>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div id="admin-page-dashboard" class="admin-page">
+        <header class="admin-header"><div><h1>Dashboard</h1><p>Visão geral do negócio (estrutura pronta para integração)</p></div></header>
+        <div class="admin-empty">
+          <i class="fa-solid fa-chart-line"></i>
+          <h3>Nenhum dado conectado ainda</h3>
+          <p>Pronta para exibir métricas como agendamentos do dia, faturamento estimado e clientes ativos assim que o Make/Supabase estiverem conectados (ver <code>getAppointments()</code>).</p>
+        </div>
+      </div>
+
+      <div id="admin-page-agenda" class="admin-page">
+        <header class="admin-header"><div><h1>Agenda</h1><p>Horários e agendamentos (estrutura pronta para integração)</p></div></header>
+        <div class="admin-empty">
+          <i class="fa-solid fa-calendar-days"></i>
+          <h3>Nenhum agendamento conectado ainda</h3>
+          <p>Pronta para listar/criar/remarcar/cancelar horários usando <code>createAppointment()</code>, <code>updateAppointment()</code>, <code>cancelAppointment()</code> e <code>checkAvailability()</code>.</p>
+        </div>
+      </div>
+
+      <div id="admin-page-clientes" class="admin-page">
+        <header class="admin-header"><div><h1>Clientes</h1><p>Base de clientes (estrutura pronta para integração)</p></div></header>
+        <div class="admin-empty">
+          <i class="fa-solid fa-users"></i>
+          <h3>Nenhum cliente conectado ainda</h3>
+          <p>Pronta para listar clientes e seu histórico de agendamentos assim que o banco de dados (Supabase) ou a planilha (Google Sheets) estiverem conectados via Make.</p>
+        </div>
+      </div>
+
+      <div id="admin-page-conversas" class="admin-page">
+        <header class="admin-header"><div><h1>Conversas</h1><p>Histórico de conversas com o assistente virtual (estrutura pronta para integração)</p></div></header>
+        <div class="admin-empty">
+          <i class="fa-solid fa-comments"></i>
+          <h3>Nenhuma conversa conectada ainda</h3>
+          <p>Pronta para exibir o histórico completo de conversas por cliente, assim que os dados enviados via <code>CONFIG.WEBHOOK_URL</code> forem persistidos pelo cenário no Make.</p>
+        </div>
+      </div>
+
+      <div id="admin-page-configuracoes" class="admin-page">
+        <header class="admin-header"><div><h1>Configurações</h1><p>Integrações e preferências do sistema (estrutura pronta para integração)</p></div></header>
+        <div class="admin-empty">
+          <i class="fa-solid fa-gear"></i>
+          <h3>Nenhuma configuração conectada ainda</h3>
+          <p>Pronta para exibir e editar os valores de <code>CONFIG</code> (Webhook do Make, OpenAI, Supabase, Google Sheets, e-mail de notificações) definidos no topo do arquivo.</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+<script>
+/* ============================================================
+   CONFIG — TODAS as credenciais/endpoints ficam aqui.
+   Nenhuma IA ou integração real está implementada.
+   Preencha conforme conectar cada serviço no Make.
+   ============================================================ */
+const CONFIG = {
+  // 🔗 MAKE.COM — cole aqui a URL do Webhook do seu cenário.
+  // O front-end envia POST e espera { "reply": "..." } de volta.
+  WEBHOOK_URL: "https://hook.us2.make.com/fauxdwzkn1tue9jvqdujvuhdmvl2s3xs",
+
+  // 🤖 OPENAI — reservado para chamada direta futura (opcional)
+  OPENAI_URL: "",
+
+  // 🗄️ SUPABASE — banco de dados / autenticação
+  SUPABASE_URL: "",
+  SUPABASE_KEY: "",
+
+  // 📊 GOOGLE SHEETS — webhook do Apps Script ou do Make
+  GOOGLE_SHEETS_WEBHOOK: "",
+
+  // 📧 GMAIL — e-mail de notificações administrativas
+  EMAIL: "",
+
+  // 🔑 Chave de API genérica (uso interno)
+  API_KEY: "",
+
+  // Configurações auxiliares (não são credenciais)
+  BUSINESS_NAME: "Hebert Barber",
+  TYPING_DELAY_MS: 1200,
+  STORAGE_KEY: "hebertbarber_conversation",
+  TYPEWRITER_SPEED_MS: 22,
+};
+
+/* ============================================================
+   ONDE CONECTAR CADA SERVIÇO
+   ------------------------------------------------------------
+   1) MAKE.COM: módulo "Webhook > Custom Webhook" → cole a URL
+      em CONFIG.WEBHOOK_URL. Resposta esperada: { "reply": "..." }
+   2) OPENAI: se não usar o Make como intermediário, um módulo
+      dentro do cenário (ou função serverless) chama a OpenAI.
+   3) GOOGLE SHEETS: módulo "Google Sheets > Add a Row" no Make
+      para registrar cada agendamento.
+   4) SUPABASE: preencha SUPABASE_URL/SUPABASE_KEY para persistir
+      clientes/agendamentos em banco de dados real.
+   5) WHATSAPP CLOUD API / EVOLUTION API: módulo correspondente
+      no Make, reenviando respostas para CONFIG.WEBHOOK_URL.
+   6) GMAIL: módulo "Gmail > Send an Email" no Make, usando
+      CONFIG.EMAIL como destinatário das notificações.
+   ============================================================ */
+
+
+/* ============================================================
+   UTILS — helpers genéricos
+   ============================================================ */
+function generateConversationId() {
+  return "conv_" + Date.now() + "_" + Math.random().toString(36).slice(2, 9);
+}
+function formatTime(date = new Date()) {
+  return date.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+function getISOTimestamp() { return new Date().toISOString(); }
+function delay(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+function autoGrowTextarea(el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; }
+
+/* ============================================================
+   STORAGE — persistência da conversa (localStorage)
+   ============================================================ */
+function saveConversation(messages) {
+  try {
+    const payload = { conversationId: window.__conversationId || generateConversationId(), messages, updatedAt: getISOTimestamp() };
+    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(payload));
+  } catch (err) { console.error("Erro ao salvar conversa:", err); }
+}
+function loadConversation() {
+  try {
+    const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    window.__conversationId = parsed.conversationId || generateConversationId();
+    return Array.isArray(parsed.messages) ? parsed.messages : [];
+  } catch (err) { console.error("Erro ao carregar conversa:", err); return []; }
+}
+function clearConversation() {
+  try {
+    localStorage.removeItem(CONFIG.STORAGE_KEY);
+    window.__conversationId = generateConversationId();
+  } catch (err) { console.error("Erro ao limpar conversa:", err); }
+}
+
+/* ============================================================
+   API — Webhook (Make). NENHUMA IA implementada aqui.
+   ============================================================ */
+async function sendMessage({ message, clientName = "", clientPhone = "" }) {
+  const payload = {
+    conversation_id: window.__conversationId || generateConversationId(),
+    client_name: clientName,
+    client_phone: clientPhone,
+    message,
+    timestamp: getISOTimestamp(),
+  };
+
+  if (!CONFIG.WEBHOOK_URL) {
+    console.warn("[HEBERT BARBER] CONFIG.WEBHOOK_URL está vazio. Configure o Webhook do Make.");
+    return receiveMessage(null);
+  }
+
+  try {
+    const response = await fetch(CONFIG.WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw new Error(`Webhook respondeu com status ${response.status}`);
+    const data = await response.json();
+    return receiveMessage(data);
+  } catch (err) {
+    console.error("[HEBERT BARBER] Erro ao enviar mensagem:", err);
+    return receiveMessage(null, err);
+  }
+}
+function receiveMessage(data, error) {
+  if (error) return "⚠️ Não foi possível conectar ao assistente agora. Tente novamente em instantes.";
+  if (!data || !data.reply) return "🔧 Assistente ainda não conectado. Configure o Webhook do Make em CONFIG.WEBHOOK_URL.";
+  return data.reply;
+}
+
+/* ============================================================
+   API — Agendamentos (stubs, futura integração)
+   ============================================================ */
+async function createAppointment(appointment) { console.warn("[appointments] createAppointment() não implementado.", appointment); }
+async function cancelAppointment(appointmentId) { console.warn("[appointments] cancelAppointment() não implementado.", appointmentId); }
+async function updateAppointment(appointmentId, changes) { console.warn("[appointments] updateAppointment() não implementado.", appointmentId, changes); }
+async function checkAvailability(date) { console.warn("[appointments] checkAvailability() não implementado.", date); return []; }
+async function getAppointments(filters = {}) { console.warn("[appointments] getAppointments() não implementado.", filters); return []; }
+
+/* ============================================================
+   API — E-mail (stub, futuro Gmail via Make)
+   ============================================================ */
+async function sendEmail({ subject, body, to = CONFIG.EMAIL }) { console.warn("[email] sendEmail() não implementado.", { subject, body, to }); }
+
+/* ============================================================
+   API — Autenticação (stubs, futuro Supabase Auth)
+   ============================================================ */
+async function login(email, password) { console.warn("[auth] login() não implementado.", email); return null; }
+async function logout() { console.warn("[auth] logout() não implementado."); }
+
+/* ============================================================
+   ROTEAMENTO DE VIEWS (landing / chat / admin)
+   ============================================================ */
+function switchView(target) {
+  document.querySelectorAll(".view").forEach((v) => v.classList.remove("view--active"));
+  document.getElementById("view-" + target).classList.add("view--active");
+  if (target === "chat" && typeof onChatOpened === "function") onChatOpened();
+  if (target === "admin") renderAdminNav();
+}
+
+function initLanding() {
+  const yearEl = document.getElementById("year");
+  if (yearEl) yearEl.textContent = new Date().getFullYear();
+
+  document.getElementById("btn-start-chat").addEventListener("click", () => switchView("chat"));
+  document.getElementById("btn-back").addEventListener("click", () => switchView("landing"));
+  document.getElementById("link-admin").addEventListener("click", (e) => { e.preventDefault(); switchView("admin"); });
+  document.getElementById("btn-admin-exit").addEventListener("click", () => switchView("landing"));
+  document.getElementById("btn-admin-logout").addEventListener("click", () => logout());
+}
+
+/* ============================================================
+   ADMIN — navegação lateral entre as 5 páginas (SPA interna)
+   ============================================================ */
+const ADMIN_NAV_ITEMS = [
+  { id: "dashboard", label: "Dashboard", icon: "fa-solid fa-gauge" },
+  { id: "agenda", label: "Agenda", icon: "fa-solid fa-calendar-days" },
+  { id: "clientes", label: "Clientes", icon: "fa-solid fa-users" },
+  { id: "conversas", label: "Conversas", icon: "fa-solid fa-comments" },
+  { id: "configuracoes", label: "Configurações", icon: "fa-solid fa-gear" },
+];
+let currentAdminPage = "dashboard";
+
+function renderAdminNav() {
+  const mount = document.getElementById("admin-nav");
+  mount.innerHTML = ADMIN_NAV_ITEMS.map((item) => {
+    const activeClass = item.id === currentAdminPage ? " active" : "";
+    return `<a href="#" data-page="${item.id}" class="${activeClass.trim()}"><i class="${item.icon}"></i> ${item.label}</a>`;
+  }).join("");
+
+  mount.querySelectorAll("a").forEach((a) => {
+    a.addEventListener("click", (e) => {
+      e.preventDefault();
+      showAdminPage(a.dataset.page);
+    });
+  });
+
+  showAdminPage(currentAdminPage);
+}
+
+function showAdminPage(pageId) {
+  currentAdminPage = pageId;
+  document.querySelectorAll(".admin-page").forEach((p) => p.classList.remove("admin-page--active"));
+  document.getElementById("admin-page-" + pageId).classList.add("admin-page--active");
+  document.querySelectorAll("#admin-nav a").forEach((a) => a.classList.toggle("active", a.dataset.page === pageId));
+}
+
+/* ============================================================
+   CHAT — mensagem de boas-vindas, envio, digitação, persistência
+   ============================================================ */
+const WELCOME_MESSAGE =
+  "Olá! 👋\n\nSou a assistente virtual da Barbearia do Hebert.\n\nPosso ajudar você a:\n\n💈 Agendar um horário\n📅 Remarcar um horário\n❌ Cancelar um horário\n💲 Consultar preços\n📍 Informar endereço\n\nComo posso ajudar?";
+
+let chatState = { messages: [], hasGreeted: false, initialized: false };
+
+function onChatOpened() {
+  if (chatState.initialized) return;
+  chatState.initialized = true;
+
+  const saved = loadConversation();
+  if (saved.length > 0) {
+    chatState.messages = saved;
+    chatState.hasGreeted = true;
+    renderAllMessages();
+  } else {
+    showWelcomeMessage();
+  }
+  bindChatEvents();
+}
+
+async function showWelcomeMessage() {
+  showTypingIndicator();
+  await delay(CONFIG.TYPING_DELAY_MS);
+  hideTypingIndicator();
+
+  const time = formatTime();
+  const bubble = appendMessageBubble("bot", "", time);
+  await typewriterEffect(bubble.textEl, WELCOME_MESSAGE);
+
+  chatState.messages.push({ sender: "bot", text: WELCOME_MESSAGE, time });
+  chatState.hasGreeted = true;
+  saveConversation(chatState.messages);
+}
+
+function typewriterEffect(el, text, speed = CONFIG.TYPEWRITER_SPEED_MS) {
+  return new Promise((resolve) => {
+    let i = 0;
+    el.textContent = "";
+    el.classList.add("typewriter-cursor");
+    const interval = setInterval(() => {
+      el.textContent += text.charAt(i);
+      i++;
+      const container = document.getElementById("chat-messages");
+      if (container) container.scrollTop = container.scrollHeight;
+      if (i >= text.length) {
+        clearInterval(interval);
+        el.classList.remove("typewriter-cursor");
+        resolve();
+      }
+    }, speed);
+  });
+}
+
+function bindChatEvents() {
+  const input = document.getElementById("chat-input");
+  const btnSend = document.getElementById("btn-send");
+  const btnClear = document.getElementById("btn-clear-chat");
+
+  btnSend.addEventListener("click", handleSend);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
+  });
+  input.addEventListener("input", () => autoGrowTextarea(input));
+  btnClear.addEventListener("click", handleClearConversation);
+}
+
+async function handleSend() {
+  const input = document.getElementById("chat-input");
+  const text = input.value.trim();
+  if (!text) return;
+
+  const time = formatTime();
+  appendMessageBubble("user", text, time);
+  chatState.messages.push({ sender: "user", text, time });
+  saveConversation(chatState.messages);
+
+  input.value = "";
+  autoGrowTextarea(input);
+  toggleSendButton(false);
+  showTypingIndicator();
+
+  // NÃO responde localmente — envia para o Webhook (Make).
+  const replyText = await sendMessage({ message: text });
+
+  hideTypingIndicator();
+  toggleSendButton(true);
+
+  const replyTime = formatTime();
+  appendMessageBubble("bot", replyText, replyTime);
+  chatState.messages.push({ sender: "bot", text: replyText, time: replyTime });
+  saveConversation(chatState.messages);
+}
+
+function handleClearConversation() {
+  document.getElementById("chat-messages").innerHTML = "";
+  chatState.messages = [];
+  chatState.hasGreeted = false;
+  clearConversation();
+  showWelcomeMessage();
+}
+
+function renderAllMessages() {
+  const container = document.getElementById("chat-messages");
+  container.innerHTML = "";
+  chatState.messages.forEach((msg) => appendMessageBubble(msg.sender, msg.text, msg.time));
+  scrollToBottom();
+}
+
+function appendMessageBubble(sender, text, time) {
+  const container = document.getElementById("chat-messages");
+  const el = document.createElement("div");
+  el.className = `message message--${sender === "user" ? "user" : "bot"}`;
+
+  const textEl = document.createElement("span");
+  textEl.className = "message__text";
+  textEl.textContent = text;
+
+  const timeEl = document.createElement("span");
+  timeEl.className = "message__time";
+  timeEl.textContent = time;
+
+  el.appendChild(textEl);
+  el.appendChild(timeEl);
+  container.appendChild(el);
+  scrollToBottom();
+  return { el, textEl };
+}
+
+function scrollToBottom() {
+  const container = document.getElementById("chat-messages");
+  container.scrollTop = container.scrollHeight;
+}
+function showTypingIndicator() { document.getElementById("typing-indicator").classList.remove("typing-indicator--hidden"); scrollToBottom(); }
+function hideTypingIndicator() { document.getElementById("typing-indicator").classList.add("typing-indicator--hidden"); }
+function toggleSendButton(enabled) { document.getElementById("btn-send").disabled = !enabled; }
+
+/* ============================================================
+   BOOTSTRAP
+   ============================================================ */
+document.addEventListener("DOMContentLoaded", () => {
+  initLanding();
+});
+</script>
+</body>
+</html>
